@@ -4,13 +4,7 @@
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::Vector4d;
-
 using std::vector;
-
-Tools::Tools() {}
-
-Tools::~Tools() {}
-
 
 
 

@@ -5,15 +5,11 @@
 
 class KalmanFilter {
  public:
-  /**
-   * Constructor
-   */
-  KalmanFilter();
 
   /**
    * Destructor
    */
-  virtual ~KalmanFilter();
+  virtual ~KalmanFilter() = default;
 
   /**
    * Init Initializes Kalman filter
@@ -63,6 +59,9 @@ class KalmanFilter {
 
   // measurement covariance matrix
   Eigen::MatrixXd R_;
+
+  // identity matrix.
+  Eigen::MatrixXd I_;
 };
 
 #endif // KALMAN_FILTER_H_
