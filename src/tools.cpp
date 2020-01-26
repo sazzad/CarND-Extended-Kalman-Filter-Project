@@ -3,6 +3,8 @@
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
+using Eigen::Vector4d;
+
 using std::vector;
 
 Tools::Tools() {}
@@ -81,4 +83,53 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   Hj(2,3) = py/asqr;
   
   return Hj;
+}
+
+VectorXd Tools::GetHx(const VectorXd& x){
+  double px = x(0);
+  double py = x(1);
+  double vx = x(2);
+  double vy = x(3);
+
+  double rho = sqrt(px*px+py*py);
+  double theta = atan2(py, px);
+  double rhodot = (px*vx+py*vy)/sqrt(px*px+py*py);
+
+  VectorXd hx = VectorXd(3);
+  hx<< rho, theta, rhodot;
+
+  return hx;
+}
+
+MatrixXd Tools::CalculateJacobianNumerical(const VectorXd& x) {
+  /**
+   * TODO:
+   * Calculate a Jacobian here.
+   */
+  MatrixXd Hj(3,4);
+  // recover state parameters
+  double h = 0.0001;
+  VectorXd y1 = (GetHx(x + Vector4d(h, 0, 0, 0))  - GetHx(x - Vector4d(h, 0, 0, 0)))/(2*h);
+  VectorXd y2 = (GetHx(x + Vector4d(0, h, 0, 0))  - GetHx(x - Vector4d(0, h, 0, 0)))/(2*h);
+  VectorXd y3 = (GetHx(x + Vector4d(0, 0, h, 0))  - GetHx(x - Vector4d(0, 0, h, 0)))/(2*h);
+  VectorXd y4 = (GetHx(x + Vector4d(0, 0, 0, h))  - GetHx(x - Vector4d(0, 0, 0, h)))/(2*h);
+
+  Hj.block<3,1>(0,0) = y1;
+  Hj.block<3,1>(0,1) = y2;
+  Hj.block<3,1>(0,2) = y3;
+  Hj.block<3,1>(0,3) = y4;
+
+
+  return Hj;
+}
+
+double Tools::NormalizeAngle(double theta){
+  while ( theta > M_PI || theta < -M_PI ) {
+    if ( theta > M_PI ) {
+      theta -= 2*M_PI;
+    } else {
+      theta += 2*M_PI;
+    }
+  }
+  return theta;
 }

@@ -1,4 +1,6 @@
 #include "kalman_filter.h"
+#include "tools.h"
+
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -35,7 +37,7 @@ void KalmanFilter::Update(const VectorXd &z) {
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
 
-#if 0
+#if 1
   MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
   MatrixXd K = PHt * Si;
@@ -51,34 +53,24 @@ void KalmanFilter::Update(const VectorXd &z) {
   P_ = (I - K * H_) * P_;
 }
 
-VectorXd get_hx(const VectorXd x){
-  double px = x(0);
-  double py = x(1);
-  double vx = x(2);
-  double vy = x(3);
 
-  double pho = sqrt(px*px+py*py);
-  double theta = atan2(py, px);
-  constexpr double PI = 3.14159265359;
-  if(theta < PI) theta+=2*PI;
-  if(theta > PI) theta-=2*PI;
-  printf("foo: %lf\n", theta);
-  double phodot = (px*vx+py*vy)/sqrt(px*px+py*py);
-  VectorXd hx = VectorXd(3);
-  hx<< pho, theta, phodot;
-
-  return hx;
-}
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
    * TODO: update the state by using Extended Kalman Filter equations
    */
-  VectorXd z_pred = get_hx(x_);
+  Tools tools;
+
+  VectorXd z_pred = tools.GetHx(x_);
   VectorXd y = z - z_pred;
+
+  y(1) = tools.NormalizeAngle(y(1));
+
+
+
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
-#if 0
+#if 1
   MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
   MatrixXd K = PHt * Si;

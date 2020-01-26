@@ -83,11 +83,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       //         and initialize state.
         double rho = measurement_pack.raw_measurements_[0];
         double theta = measurement_pack.raw_measurements_[1];
+        double rhodot = measurement_pack.raw_measurements_[2];
 
         double px = rho * cos(theta);
         double py = rho * sin(theta);
+        //double vx = rhodot * cos(theta);
+        //double vy = rhodot * sin(theta);
 
-        ekf_.x_ << px, py, 0., 0.;
+        ekf_.x_ << px, py, 0,0;//vx, vy;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // set the state with the initial location and zero velocity
@@ -106,6 +109,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
 
   double dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0; //seconds.
+  previous_timestamp_ = measurement_pack.timestamp_;
 
   /**
    * Prediction
@@ -117,7 +121,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    * TODO: Update the process noise covariance matrix.
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-  ekf_.F_(1,3) = dt;
+  ekf_.F_(0, 2) = dt;
+  ekf_.F_(1, 3) = dt;
 
   double dt2 = dt*dt;
   double dt3 = dt * dt2;
@@ -148,6 +153,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // TODO: Radar updates
     ekf_.R_ = R_radar_;
     ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
+    //ekf_.H_ = tools.CalculateJacobianNumerical(ekf_.x_);
     ekf_.UpdateEKF(measurement_pack.raw_measurements_);
 
   } else {
@@ -156,7 +162,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.H_ = H_laser_;
     ekf_.Update(measurement_pack.raw_measurements_);
   }
-  previous_timestamp_ = measurement_pack.timestamp_;
 
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
